@@ -1,0 +1,15 @@
+# CP-Mamba add-on (B5') for Kaggle Tesla T4 (16GB)
+base: addon_cp.yaml
+train:
+  batch_size: 8
+  lr: 6.25e-5            # Effective batch size 16 (batch 8 x accum 2)
+  accum_steps: 2
+  amp: fp16
+  num_workers: 2
+eval:
+  batch_size: 4
+  workers: 2
+model:
+  addon:
+    micro_batch: 4        # 8 images processed in 2 chunks of 4 to save VRAM
+

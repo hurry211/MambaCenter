@@ -17,8 +17,12 @@ from pathlib import Path
 import torch
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT), str(ROOT / 'tools'), str(ROOT / 'tests'),
-                str(ROOT / 'baseline/CenterNet/src/lib')]
+CENTERNET_LIB = ROOT / 'baseline' / 'CenterNet' / 'src' / 'lib'
+for k in list(sys.modules.keys()):
+    if k == 'datasets' or k.startswith('datasets.'):
+        if not hasattr(sys.modules[k], 'dataset_factory'):
+            del sys.modules[k]
+sys.path[:0] = [str(CENTERNET_LIB), str(ROOT), str(ROOT / 'tools'), str(ROOT / 'tests')]
 
 from mambacenter import scan  # noqa: E402
 from mambacenter.cp_mamba import CPConfig, CPSS2D  # noqa: E402

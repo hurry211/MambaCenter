@@ -1,0 +1,13 @@
+# Kaggle Tesla T4 (16GB) base training config
+# Optimized for 16GB VRAM, 2-4 vCPUs, and native FP16 Tensor Cores
+base: _base.yaml
+train:
+  batch_size: 8          # fits safely inside 16GB T4 VRAM
+  lr: 3.125e-5           # CenterNet Adam rule: 5e-4 * 8 / 128
+  amp: fp16              # T4 uses FP16 with GradScaler (native hardware Tensor Core acceleration)
+  num_workers: 2         # Kaggle notebooks have 2-4 vCPUs
+  accum_steps: 2         # Effective batch size 16 (with lr = 6.25e-5)
+eval:
+  batch_size: 4
+  workers: 2
+

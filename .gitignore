@@ -96,6 +96,11 @@ events.out.tfevents.*
 # Publish only compact metrics/provenance, not private run records
 /results/*
 !/results/comparison.json
+!/results/*.json
+!/results/*.jsonl
+!/results/*.png
+!/results/vis/
+!/results/vis/*
 /mamba-yolo/results/*
 !/mamba-yolo/results/compatibility_patches.json
 

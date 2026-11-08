@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-28",
+  "updated": "2026-11-08",
   "protocol": "VisDrone2019-DET val (548 images), converted COCO annotations, overall COCO AP/AP50 with explicit maxDets; not the official VisDrone ignore-region evaluation",
   "models": [
     {
@@ -27,6 +27,28 @@
     "CenterNet-family models share one recipe (configs/_base.yaml); all earlier CenterNet/CenterMamba/CGM results were discarded on 2026-10-24."
   ],
   "centernet_family": [
+    {
+      "model": "addon_cp_fast15",
+      "run": "cpmamba_kaggle_t4_s317",
+      "arch": "dlacp_34",
+      "seed": 317,
+      "epochs_planned": 15,
+      "status": "completed",
+      "epoch": 15,
+      "params": 20524218,
+      "AP@100": 0.19035977939622564,
+      "AP50@100": 0.39454364026167316,
+      "AP75@100": 0.15999014881300946,
+      "AP@500": 0.19055288843267895,
+      "AP50@500": 0.39512483084032207,
+      "AP75@500": 0.16003243041192972,
+      "AP_s": 0.119,
+      "AP_m": 0.272,
+      "AP_l": 0.374,
+      "AR@100": 0.358,
+      "hardware": "Kaggle Tesla T4 (16GB)",
+      "protocol": "Fast validation (15 epochs), eval_interval=1 (every epoch evaluated)"
+    },
     {
       "model": "addon_cp_b1",
       "run": "addon_cp_b1_s317",

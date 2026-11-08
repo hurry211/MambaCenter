@@ -18,9 +18,14 @@ def run_dir(cfg):
 
 def setup_paths():
     """Make CenterNet's src/lib and the mambacenter package importable."""
-    for path in (str(ROOT), str(CENTERNET_LIB)):
-        if path not in sys.path:
-            sys.path.insert(0, path)
+    for k in list(sys.modules.keys()):
+        if k == 'datasets' or k.startswith('datasets.'):
+            if not hasattr(sys.modules[k], 'dataset_factory'):
+                del sys.modules[k]
+    for path in (str(CENTERNET_LIB), str(ROOT)):
+        if path in sys.path:
+            sys.path.remove(path)
+        sys.path.insert(0, path)
 
 
 def deep_merge(base, override):
