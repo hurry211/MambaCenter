@@ -1,0 +1,7 @@
+# CP-Mamba add-on ablation: Same token selection (top-15% + extras), but pure raster order (bins=1) and no delta_mod
+base: kaggle_addon_cp.yaml
+name: addon_cp_raster
+model:
+  cp:
+    delta_mod: false
+    bins: 1

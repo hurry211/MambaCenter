@@ -1,0 +1,11 @@
+# CenterNet DLA-34 + DCNv2 baseline (R0) for Kaggle Tesla T4 (16GB)
+base: centernet_dla34.yaml
+train:
+  batch_size: 8
+  lr: 6.25e-5            # Effective batch size 16 (batch 8 x accum 2)
+  accum_steps: 2
+  amp: fp16
+  num_workers: 2
+eval:
+  batch_size: 4
+  workers: 2

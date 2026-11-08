@@ -1,0 +1,9 @@
+# IA-Mamba add-on ablation: Δ-modulation disabled, innovation out of heatmap head, aux prediction loss disabled
+base: kaggle_addon_ia_a5.yaml
+name: addon_ia_ablation
+model:
+  ia:
+    modulate: false
+    to_head: false
+loss:
+  pred_weight: 0.0

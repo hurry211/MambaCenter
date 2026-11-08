@@ -1,0 +1,6 @@
+# CP-Mamba add-on ablation: Δ-modulation disabled
+base: kaggle_addon_cp.yaml
+name: addon_cp_nodelta
+model:
+  cp:
+    delta_mod: false
