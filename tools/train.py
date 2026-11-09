@@ -209,6 +209,10 @@ def main():
         checkpoint = torch.load(run / 'model_last.pth', map_location='cpu', weights_only=False)
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
+        for state in optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(device)
         if 'scaler' in checkpoint and checkpoint['scaler'] is not None and scaler.is_enabled():
             scaler.load_state_dict(checkpoint['scaler'])
         start_epoch, step = checkpoint['epoch'], checkpoint['step']
@@ -272,7 +276,11 @@ def main():
                 best_val_score = val_score
                 save(run / 'model_best.pth', {'epoch': epoch, 'step': step, 'state_dict': model.state_dict(),
                                               'metrics': metrics})
-                log.line('>>> [NEW BEST] AP50@500: %.4f -> saved model_best.pth' % val_score)
+                best_result = {'run': cfg['name'], 'arch': opt.arch, 'epoch': epoch, 'split': 'val',
+                               'test_size': 'fix_res %d' % opt.input_res, 'decode_topk': opt.K,
+                               'params': common.count_parameters(model), **metrics}
+                (run / 'eval_val_best.json').write_text(json.dumps(best_result, indent=2) + '\n')
+                log.line('>>> [NEW BEST] AP50@500: %.4f (epoch %d) -> saved model_best.pth' % (val_score, epoch))
         log.record(record)
         log.line('epoch %d done: %s' % (epoch, json.dumps(
             {k: float('%.4g' % v) if isinstance(v, float) else v
@@ -282,6 +290,7 @@ def main():
             result = {'run': cfg['name'], 'arch': opt.arch, 'epoch': epochs, 'split': 'val',
                       'test_size': 'fix_res %d' % opt.input_res, 'decode_topk': opt.K,
                       'params': common.count_parameters(model), **metrics}
+            (run / 'eval_val_final.json').write_text(json.dumps(result, indent=2) + '\n')
             (run / 'eval_val.json').write_text(json.dumps(result, indent=2) + '\n')
             log.line('final: ' + json.dumps(result))
 
