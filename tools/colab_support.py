@@ -60,8 +60,64 @@ def write_json(path, value):
 
 
 def checked(argv, cwd=None, env=None):
-    print("RUN:", " ".join(map(str, argv)), flush=True)
-    subprocess.run(list(map(str, argv)), cwd=cwd, env=env, check=True)
+    """Forward child stdout/stderr to IPython and preserve full setup diagnostics."""
+    args = list(map(str, argv))
+    print("RUN:", " ".join(args), flush=True)
+    drive_root = globals().get("DRIVE_ROOT")
+    log = None
+    if drive_root is not None:
+        directory = Path(drive_root) / "setup_logs"
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / f"command_{time.time_ns()}.log"
+        log = path.open("w", encoding="utf-8")
+        print("LOG:", path, flush=True)
+    process = None
+    tail = []
+    try:
+        process = subprocess.Popen(args, cwd=cwd, env=env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, text=True, bufsize=1)
+        for line in process.stdout:
+            print(line, end="", flush=True)
+            if log is not None:
+                log.write(line)
+                log.flush()
+            tail.append(line)
+            tail = tail[-30:]
+        returncode = process.wait()
+    except BaseException:
+        if process is not None and process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+        raise
+    finally:
+        if process is not None and process.stdout is not None:
+            process.stdout.close()
+        if log is not None:
+            log.close()
+    if returncode:
+        raise subprocess.CalledProcessError(returncode, args, output="".join(tail))
+
+
+def native_build_script(workdir):
+    """Adapt only the compiler standard; preserve the pinned training source."""
+    import torch
+    original = Path(workdir) / "runtime/selective-scan/build.py"
+    header = Path(torch.__file__).parent / "include/ATen/ATen.h"
+    cxx20 = "C++20 or later" in header.read_text(encoding="utf-8")
+    standard = "c++20" if cxx20 else "c++17"
+    source = original.read_text(encoding="utf-8")
+    script = original
+    if cxx20:
+        if source.count("-std=c++17") != 2:
+            raise RuntimeError("Unexpected native build source; review compiler flags before continuing.")
+        script = original.with_name("build_colab_cxx20.py")
+        script.write_text(source.replace("-std=c++17", "-std=c++20"), encoding="utf-8")
+    return script, {"cxx_standard": standard, "original_sha256": sha256(original),
+                    "compat_sha256": sha256(script), "max_jobs": 1}
 
 
 def prepare_repo(workdir):

@@ -69,8 +69,12 @@ environment = {"gpu": gpu, "torch": torch.__version__, "cuda": torch.version.cud
                "python": platform.python_version(), "platform": platform.platform()}
 print(environment)
 """),
-        code("""# 5. 编译并核验原生扫描后端；失败直接停止
-checked([sys.executable, "runtime/selective-scan/build.py", "build_ext",
+        code("""# 5. 按PyTorch头文件选择C++17/20，编译原生扫描；失败直接停止
+build_script, build_info = native_build_script(WORKDIR)
+os.environ["MAX_JOBS"] = "1"
+environment["native_build"] = build_info
+print("Native build:", build_info, flush=True)
+checked([sys.executable, str(build_script.relative_to(WORKDIR)), "build_ext",
          "--build-lib", "runtime/selective-scan/packages", "--build-temp", "runtime/selective-scan/build"], cwd=WORKDIR)
 paths = [WORKDIR / "runtime/selective-scan/packages", WORKDIR / "runtime/selective-scan/mamba", WORKDIR]
 os.environ["PYTHONPATH"] = os.pathsep.join(map(str, paths)) + os.pathsep + os.environ.get("PYTHONPATH", "")
@@ -135,5 +139,6 @@ if __name__ == "__main__":
     for path in [args.output, args.extra_output]:
         if path is not None:
             path.parent.mkdir(parents=True, exist_ok=True)
-            nbf.write(notebook, path)
+            with path.open("w", encoding="utf-8", newline="\n") as stream:
+                nbf.write(notebook, stream)
             print(path)

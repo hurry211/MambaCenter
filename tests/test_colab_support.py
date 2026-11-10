@@ -1,9 +1,13 @@
 """CPU-only checks for Colab storage and resume selection; no model training."""
 import hashlib
+import contextlib
+import io
 import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import subprocess
+import sys
 import unittest
 from unittest import mock
 import zipfile
@@ -130,6 +134,18 @@ class ColabSupportTests(unittest.TestCase):
         data["annotations"].reverse()
         b.write_text(json.dumps(data, indent=2))
         self.assertEqual(support.coco_fingerprint(a), support.coco_fingerprint(b))
+
+    def test_child_failure_preserves_stdout_stderr_and_drive_log(self):
+        output = io.StringIO()
+        with mock.patch.dict(support.__dict__, {"DRIVE_ROOT": self.root}), contextlib.redirect_stdout(output):
+            with self.assertRaises(subprocess.CalledProcessError) as error:
+                support.checked([sys.executable, "-c", "import sys; print('native diagnostic'); print('compiler failed',file=sys.stderr); sys.exit(7)"])
+        self.assertEqual(error.exception.returncode, 7)
+        self.assertIn("compiler failed", output.getvalue())
+        self.assertIn("native diagnostic", error.exception.output)
+        logs = list((self.root / "setup_logs").glob("*.log"))
+        self.assertEqual(len(logs), 1)
+        self.assertIn("compiler failed", logs[0].read_text())
 
 
 if __name__ == "__main__":
